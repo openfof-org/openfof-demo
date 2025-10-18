@@ -203,8 +203,6 @@ The API currently includes the following assets:
 5. **SPPIX** - SP Funds S&P 500 Sharia Industry Exclusions ETF
 6. **SQQQ** - ProShares UltraPro Short QQQ
 7. **TLT** - iShares 20+ Year Treasury Bond ETF
-8. **S&P500** - S&P 500 Index
-
 ## Development
 
 ### Adding New Assets
@@ -238,7 +236,7 @@ Here are some test queries to try:
 # Search for semiconductor-related assets
 curl 'http://localhost:5000/api/assets/search?q=semiconductor'
 
-# Search for "S" (will match SOXS, SQQQ, SPPIX, S&P500, etc.)
+# Search for "S" (will match SOXS, SQQQ, SPPIX, etc.)
 curl 'http://localhost:5000/api/assets/search?q=S'
 
 # Search for ETFs

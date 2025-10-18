@@ -25,7 +25,7 @@ A complete Flask-based REST API server with the following endpoints:
 
 ### 2. Asset Metadata Module (`assets_metadata.py`)
 Contains:
-- Asset data definitions for all 8 available assets (BITQ, GDX, RSBT, SOXS, SPPIX, SQQQ, TLT, S&P500)
+- Asset data definitions for all 8 available assets (BITQ, GDX, RSBT, SOXS, SPPIX, SQQQ, TLT)
 - Search functionality implementation
 - Helper functions for asset retrieval
 - Extensible structure for adding more assets

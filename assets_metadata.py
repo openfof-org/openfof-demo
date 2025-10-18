@@ -37,7 +37,6 @@ ASSETS_METADATA = [
     {"id": "asset-030", "symbol": "VGLT", "name": "Vanguard Long-Term Treasury ETF", "type": "bond_etf", "description": "Long-term Treasury bonds"},
     {"id": "asset-031", "symbol": "VGSH", "name": "Vanguard Short-Term Treasury ETF", "type": "bond_etf", "description": "Short-term Treasury bonds"},
     {"id": "asset-032", "symbol": "VMBS", "name": "Vanguard Mortgage-Backed Securities ETF", "type": "bond_etf", "description": "Mortgage-backed securities"},
-    {"id": "index-001", "symbol": "S&P500", "name": "S&P 500 Index", "type": "index", "description": "Standard & Poor's 500 Index"}
 ]
 
 

@@ -107,7 +107,6 @@ The API currently includes 8 assets:
 | SPPIX | SP Funds S&P 500 Sharia Industry Exclusions ETF | equity_etf |
 | SQQQ | ProShares UltraPro Short QQQ | leveraged_etf |
 | TLT | iShares 20+ Year Treasury Bond ETF | bond_etf |
-| S&P500 | S&P 500 Index | index |
 
 ## 🔧 Troubleshooting
 
