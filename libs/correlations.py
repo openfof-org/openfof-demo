@@ -15,10 +15,13 @@ def excel_to_csv_single(excel_path, csv_path: Optional[str|Path]=None) -> Path:
     df.to_csv(out, index=False)
     return out
 
+# --- replace your loader with this safer version ---
 def load_prices_from_csvs(
     csv_files: Sequence[str|Path],
     date_col: str = "Date",
-    price_col: str = "Close"
+    price_col: str = "Close",
+    resample: bool = True,
+    ffill_limit: int = 3,   # forward-fill up to 3 days
 ) -> pd.DataFrame:
     series = []
     for fp in csv_files:
@@ -29,15 +32,24 @@ def load_prices_from_csvs(
         df = df.dropna(subset=[date_col]).sort_values(date_col)
         s = df.set_index(date_col)[price_col].astype(float).rename(tkr)
         series.append(s)
+
     if not series:
         raise ValueError("No valid CSVs loaded.")
-    prices = pd.concat(series, axis=1, join="inner")
+
+    # 1) Outer join (union of dates)
+    prices = pd.concat(series, axis=1, join="outer").sort_index()
+
+    # 2) Optional: resample to daily and forward-fill small gaps
+    if resample:
+        prices = prices.resample("B").last()         # business days
+        prices = prices.ffill(limit=ffill_limit)
+
     return prices
 
-def returns_corr(prices: pd.DataFrame) -> pd.DataFrame:
-    rets = prices.pct_change().dropna(how="any")
-    corr = rets.corr()
-    return abs(corr)
+def returns_corr(prices: pd.DataFrame, absolute: bool = False, min_periods: int = 5) -> pd.DataFrame:
+    rets = prices.pct_change()
+    corr = rets.corr(min_periods=min_periods)  # pairwise, ignores NaNs
+    return corr.abs() if absolute else corr
 
 def plot_lower_triangle_heatmap(
     corr: pd.DataFrame,
@@ -78,7 +90,7 @@ def plot_lower_triangle_heatmap(
     fig.tight_layout()
     plt.show()
 
-csv_files = sorted(Path("assets/").glob("*.csv"))
+csv_files = sorted(Path("assets").glob("*.csv"))
 prices = load_prices_from_csvs(csv_files, date_col="Date", price_col="Close")
 corr = returns_corr(prices)    
 plot_lower_triangle_heatmap(corr)
