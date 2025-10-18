@@ -1,0 +1,84 @@
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.iml
+
+# Pytest / coverage
+.pytest_cache/
+.cache/
+.mypy_cache/
+.dmypy.json
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor swap / backup files
+*~
+.#*
+*.swp
+
+# Local configuration
+local_settings.py
+instance/
+.env
+.env.*
+
+# Wheel / build artifacts
+*.whl
+
+# Node modules (if front-end tooling is added)
+node_modules/
+
+# Ignore common temporary or generated files inside project data folders
+# Note: existing CSVs in `assets/` and `index/` are intentionally NOT ignored here.
+# Ignore generated binary/serialized artifacts and caches that may be created during runs
+assets/*.pkl
+assets/*.pickle
+assets/*.npy
+index/*.pkl
+index/*.pickle
+
+# Other files you may want to ignore locally; uncomment to use
+# .env.local
+# .venv/*
+
+# End of .gitignore
+
