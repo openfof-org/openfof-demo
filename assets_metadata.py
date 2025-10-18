@@ -46,41 +46,47 @@ def get_all_assets():
 
 
 def search_assets(query: str, case_sensitive: bool = False):
-    """
-    Search for assets by symbol or name.
-    
-    Args:
-        query: Search query string
-        case_sensitive: Whether to perform case-sensitive search (default: False)
-    
-    Returns:
-        List of matching asset dictionaries
-    """
     if not query:
         return []
-    
-    search_term = query if case_sensitive else query.lower()
-    results = []
-    
-    for asset in ASSETS_METADATA:
-        symbol = asset["symbol"] if case_sensitive else asset["symbol"].lower()
-        name = asset["name"] if case_sensitive else asset["name"].lower()
-        
-        # Check for partial matches in symbol or name
-        if search_term in symbol or search_term in name:
-            results.append(asset)
-    
-    if case_sensitive:
-        key_fn = lambda a: (a["symbol"], a["name"], a.get("description", ""))
-    else:
-        key_fn = lambda a: (
-            a["symbol"].casefold(),
-            a["name"].casefold(),
-            a.get("description", "").casefold(),
-        )
-    results = sorted(results, key=key_fn)
 
-    return results
+    norm = (lambda s: s if case_sensitive else s.casefold())
+    q = norm(query)
+
+    ranked = []
+    for a in ASSETS_METADATA:
+        sym_raw = a["symbol"]; name_raw = a["name"]; desc_raw = a.get("description", "")
+
+        sym = norm(sym_raw)
+        name = norm(name_raw)
+        desc = norm(desc_raw)
+
+        # must match in symbol or name
+        in_sym = q in sym
+        in_name = q in name
+        if not (in_sym or in_name):
+            continue
+
+        # --- relevance rank: smaller tuple sorts earlier ---
+        exact_sym   = 0 if sym == q else 1
+        starts_sym  = 0 if sym.startswith(q) else 1
+        pos_sym     = sym.find(q) if in_sym else 10_000
+        starts_name = 0 if name.startswith(q) else 1
+        pos_name    = name.find(q) if in_name else 10_000
+
+        rank = (
+            exact_sym,
+            starts_sym,
+            pos_sym,
+            starts_name,
+            pos_name,
+            sym,            # tie-breakers (stable, case-insensitive)
+            name,
+            desc,
+        )
+        ranked.append((rank, a))
+
+    ranked.sort(key=lambda x: x[0])
+    return [a for _, a in ranked]
 
 
 def get_asset_by_id(asset_id: str):
