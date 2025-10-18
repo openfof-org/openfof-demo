@@ -34,15 +34,15 @@ def load_prices_from_csvs(
     prices = pd.concat(series, axis=1, join="inner")
     return prices
 
-def returns_corr(prices: pd.DataFrame, absolute: bool = False) -> pd.DataFrame:
+def returns_corr(prices: pd.DataFrame) -> pd.DataFrame:
     rets = prices.pct_change().dropna(how="any")
     corr = rets.corr()
-    return corr.abs() if absolute else corr
+    return abs(corr)
 
 def plot_lower_triangle_heatmap(
     corr: pd.DataFrame,
     title: str = "Correlation Heatmap (Lower Triangle)",
-    vmin: float = -1.0,
+    vmin: float = 0.0,
     vmax: float = 1.0,
     cmap: str = "RdYlGn_r",  # green=neg, red=pos (reversed RdYlGn)
     annotate: bool = True,
@@ -78,3 +78,7 @@ def plot_lower_triangle_heatmap(
     fig.tight_layout()
     plt.show()
 
+csv_files = sorted(Path("libs/test").glob("*.csv"))
+prices = load_prices_from_csvs(csv_files, date_col="Date", price_col="Close")
+corr = returns_corr(prices)    
+plot_lower_triangle_heatmap(corr)
