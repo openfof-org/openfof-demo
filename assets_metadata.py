@@ -70,6 +70,16 @@ def search_assets(query: str, case_sensitive: bool = False):
         if search_term in symbol or search_term in name:
             results.append(asset)
     
+    if case_sensitive:
+        key_fn = lambda a: (a["symbol"], a["name"], a.get("description", ""))
+    else:
+        key_fn = lambda a: (
+            a["symbol"].casefold(),
+            a["name"].casefold(),
+            a.get("description", "").casefold(),
+        )
+    results = sorted(results, key=key_fn)
+
     return results
 
 
