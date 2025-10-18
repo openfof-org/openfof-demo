@@ -90,7 +90,8 @@ def plot_lower_triangle_heatmap(
     fig.tight_layout()
     plt.show()
 
-csv_files = sorted(Path("index").glob("*.csv"))
-prices = load_prices_from_csvs(csv_files, date_col="Date", price_col="Close")
-corr = returns_corr(prices)    
-plot_lower_triangle_heatmap(corr)
+if __name__ == "__main__":
+    csv_files = sorted(Path("assets").glob("*.csv"))
+    prices = load_prices_from_csvs(csv_files, date_col="Date", price_col="Close")
+    corr = returns_corr(prices)    
+    plot_lower_triangle_heatmap(corr)
