@@ -46,7 +46,7 @@ def load_prices_from_csvs(
 
     return prices
 
-def returns_corr(prices: pd.DataFrame, absolute: bool = False, min_periods: int = 5) -> pd.DataFrame:
+def returns_corr(prices: pd.DataFrame, absolute: bool = True, min_periods: int = 5) -> pd.DataFrame:
     rets = prices.pct_change()
     corr = rets.corr(min_periods=min_periods)  # pairwise, ignores NaNs
     return corr.abs() if absolute else corr

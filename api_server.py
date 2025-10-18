@@ -369,21 +369,33 @@ def get_portfolio_data():
         # Create unified timeline
         all_dates = sorted(list(all_dates))
         
-        # Build historical DataPoints
+        # Normalize historical data - ensure all assets have values for all dates
+        normalized_historical = {}
+        for symbol in symbols:
+            df = historical_data[symbol]
+            # Create a DataFrame with all dates
+            complete_df = pd.DataFrame({'Date': all_dates})
+            # Merge with existing data
+            complete_df = complete_df.merge(df[['Date', 'Close']], on='Date', how='left')
+            # Interpolate missing values linearly
+            complete_df['Close'] = complete_df['Close'].interpolate(method='linear', limit_direction='both')
+            normalized_historical[symbol] = complete_df
+        
+        # Build historical DataPoints with normalized data
         historical = []
         for date in all_dates:
             point = {"date": date.isoformat()}
             values = []
             
             for symbol in symbols:
-                df = historical_data[symbol]
+                df = normalized_historical[symbol]
                 row = df[df['Date'] == date]
                 if not row.empty:
                     value = float(row.iloc[0]['Close'])
                     point[symbol] = value
                     values.append(value)
             
-            # Calculate average if we have values
+            # Calculate average (all assets should have values now)
             if values:
                 point['average'] = sum(values) / len(values)
                 historical.append(point)
@@ -393,38 +405,52 @@ def get_portfolio_data():
         future_days = min(90, days // 2)
         
         future_data = {}
+        future_dates_set = set()
+        
         for symbol in symbols:
             df = historical_data[symbol]
             future_df = generate_future_projections(df, symbol, future_days)
             future_data[symbol] = future_df
+            if not future_df.empty:
+                future_dates_set.update(future_df['Date'].tolist())
         
-        # Build future DataPoints
-        future = []
-        if future_days > 0 and future_data:
-            # Get all future dates
-            future_dates = set()
-            for df in future_data.values():
+        # Normalize future data
+        if future_dates_set:
+            future_dates = sorted(list(future_dates_set))
+            normalized_future = {}
+            
+            for symbol in symbols:
+                df = future_data[symbol]
+                # Create a DataFrame with all future dates
+                complete_df = pd.DataFrame({'Date': future_dates})
+                # Merge with existing data
                 if not df.empty:
-                    future_dates.update(df['Date'].tolist())
+                    complete_df = complete_df.merge(df[['Date', 'Close']], on='Date', how='left')
+                else:
+                    complete_df['Close'] = None
+                # Interpolate missing values linearly
+                complete_df['Close'] = complete_df['Close'].interpolate(method='linear', limit_direction='both')
+                normalized_future[symbol] = complete_df
             
-            future_dates = sorted(list(future_dates))
-            
+            # Build future DataPoints with normalized data
+            future = []
             for date in future_dates:
                 point = {"date": date.isoformat()}
                 values = []
                 
                 for symbol in symbols:
-                    df = future_data[symbol]
-                    if not df.empty:
-                        row = df[df['Date'] == date]
-                        if not row.empty:
-                            value = float(row.iloc[0]['Close'])
-                            point[symbol] = value
-                            values.append(value)
+                    df = normalized_future[symbol]
+                    row = df[df['Date'] == date]
+                    if not row.empty and pd.notna(row.iloc[0]['Close']):
+                        value = float(row.iloc[0]['Close'])
+                        point[symbol] = value
+                        values.append(value)
                 
                 if values:
                     point['average'] = sum(values) / len(values)
                     future.append(point)
+        else:
+            future = []
         
         # Calculate statistics
         stats = {}
@@ -503,7 +529,6 @@ def get_portfolio_data():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/correlation-groups', methods=['POST'])
 def get_correlation_groups():
