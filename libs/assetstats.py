@@ -115,7 +115,7 @@ def calculate_sharpe_ratio(return_rate: float, volatility: float) -> float:
     """
     if volatility == 0:
         raise ValueError("Volatility is zero, cannot calculate Sharpe Ratio!")
-    output = (return_rate) / volatility  # Assuming risk-free rate is 0
+    output = (return_rate) / volatility
     return round(output, 4)
 
 def calculate_beta(return_rate: float, market_return: float, volatility: float) -> float:
