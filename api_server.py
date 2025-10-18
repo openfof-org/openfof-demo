@@ -645,8 +645,8 @@ def get_heatmap_data():
         
         asset_ids = data.get('assetIds', [])
         
-        if not asset_ids or not isinstance(asset_ids, list):
-            return jsonify({"error": "assetIds must be a non-empty array"}), 400
+        if not asset_ids or not isinstance(asset_ids, list) or len(asset_ids) < 2:
+            return jsonify({"error": "assetIds must be a non-empty array with at least 2 elements"}), 400
         
         # Get symbols for asset IDs
         symbols = []
