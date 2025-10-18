@@ -4,11 +4,12 @@ Provides endpoints for searching and retrieving asset information.
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from assets_metadata import search_assets, get_all_assets, get_asset_by_id, get_asset_by_symbol
 from typing import Dict, List, Any
 
 app = Flask(__name__)
-
+CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 
 def paginate_results(results: List[Dict], page: int = 1, page_size: int = 10) -> Dict[str, Any]:
     """
