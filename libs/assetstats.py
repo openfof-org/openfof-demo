@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 
-def get_percentage_change(ticker: str, days: int) -> float:
+def get_percentage_change(ticker: str, days: int, dtype: str = "assets") -> float:
     """
     Calculate the percentage change in ETF value over the specified number of calendar days.
     
@@ -19,7 +19,7 @@ def get_percentage_change(ticker: str, days: int) -> float:
         ValueError: If the number of days is invalid or no data available for the target date
     """
     # Construct the file path
-    csv_path = os.path.join('assets', f'{ticker}.csv')
+    csv_path = os.path.join(dtype, f'{ticker}.csv')
     
     # Check if file exists
     if not os.path.exists(csv_path):
@@ -106,20 +106,33 @@ def get_volatility(ticker: str, days: int) -> float:
     
     return round(volatility, 4)
 
-def calculate_sharpe_ratio(return_aer: float, volatility: float, risk_free_rate: float = 0.00) -> float:
+def calculate_sharpe_ratio(return_rate: float, volatility: float) -> float:
     """
     Calculate the Sharpe Ratio given the annualized return, volatility, and risk-free rate.
-    Sharpe Ratio = (Return_AER - Risk_Free_Rate) / Volatility
+    Sharpe Ratio = Return_Rate / Volatility
 
     It is a measure of return per unit of risk.
     """
     if volatility == 0:
         raise ValueError("Volatility is zero, cannot calculate Sharpe Ratio!")
-    excess_return = return_aer - risk_free_rate
-    output = excess_return / volatility  # Assuming volatility is not zero
+    output = (return_rate) / volatility  # Assuming risk-free rate is 0
     return round(output, 4)
+
+def calculate_beta(return_rate: float, market_return: float, volatility: float) -> float:
+    """
+    Calculate the Beta of an asset given its return rate, market return, and volatility.
+    Beta = Covariance(Return_AER, Market_Return) / Variance(Market_Return)
+
+    It is a measure of an asset's volatility in relation to the overall market.
+    """
+    if volatility == 0:
+        raise ValueError("Volatility is zero, cannot calculate Beta!")
+    beta = (return_rate - market_return) / volatility  # Simplified calculation
+    return round(beta, 4)
 
 if __name__ == "__main__":
     print(get_percentage_change("SOXS", 364))
     print(get_volatility("SOXS", 364))
     print(calculate_sharpe_ratio(get_percentage_change("SOXS", 364), get_volatility("SOXS", 364)))
+    print(get_percentage_change("S&P500", 364, "index"))
+    print(calculate_beta(get_percentage_change("SOXS", 364), get_percentage_change("S&P500", 364, "index"), get_volatility("SOXS", 364)))
