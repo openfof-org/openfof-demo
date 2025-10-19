@@ -29,7 +29,7 @@ TIME_RANGE_DAYS = {
     '5Y': 1825,
     'MAX': 3650
 }
-CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+CORS(app, origins=["http://localhost:3000", "https://open-fof.web.app/"], supports_credentials=True)
 
 def paginate_results(results: List[Dict], page: int = 1, page_size: int = 10) -> Dict[str, Any]:
     """
