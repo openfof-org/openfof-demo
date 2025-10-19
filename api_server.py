@@ -265,7 +265,11 @@ def load_asset_data(symbol: str, days: int) -> pd.DataFrame:
 
 def generate_future_projections(df: pd.DataFrame, symbol: str, num_days: int, simulations: int = 1000) -> pd.DataFrame:
     """
-    Generate future price projections using Monte Carlo simulation.
+    Generate future price projections using Monte Carlo simulation with Geometric Brownian Motion.
+    
+    This implementation uses Geometric Brownian Motion (GBM) which is more realistic for modeling
+    stock prices than simple normal distribution, as it prevents negative prices and better captures
+    the multiplicative nature of returns.
     
     Args:
         df: Historical price DataFrame
@@ -274,17 +278,19 @@ def generate_future_projections(df: pd.DataFrame, symbol: str, num_days: int, si
         simulations: Number of Monte Carlo simulations
     
     Returns:
-        DataFrame with projected dates and prices
+        DataFrame with projected dates, mean prices, and confidence intervals
     """
     if len(df) < 2:
         return pd.DataFrame()
     
-    # Calculate daily returns
-    returns = df['Close'].pct_change().dropna()
+    # Calculate daily log returns (more appropriate for GBM)
+    # Using pandas methods to maintain Series type
+    log_returns = (df['Close'] / df['Close'].shift(1)).apply(np.log).dropna()
     
-    # Calculate mean and std of returns
-    mu = returns.mean()
-    sigma = returns.std()
+    # Calculate drift (mu) and volatility (sigma) from historical data
+    # Drift: expected return adjusted for variance
+    mu = log_returns.mean()
+    sigma = log_returns.std()
     
     # Get last price and date
     last_price = df.iloc[-1]['Close']
@@ -293,24 +299,47 @@ def generate_future_projections(df: pd.DataFrame, symbol: str, num_days: int, si
     # Generate future dates
     future_dates = [last_date + timedelta(days=i+1) for i in range(num_days)]
     
-    # Monte Carlo simulation
-    simulated_prices = []
-    for _ in range(simulations):
-        price = last_price
-        simulation_prices = []
-        for _ in range(num_days):
-            # Generate random return
-            random_return = np.random.normal(mu, sigma)
-            price = price * (1 + random_return)
-            simulation_prices.append(price)
-        simulated_prices.append(simulation_prices)
+    # Monte Carlo simulation using Geometric Brownian Motion
+    # S(t) = S(0) * exp((mu - 0.5*sigma^2)*t + sigma*sqrt(t)*Z)
+    # where Z ~ N(0,1)
     
-    # Average across simulations
-    avg_prices = np.mean(simulated_prices, axis=0)
+    simulated_prices = np.zeros((simulations, num_days))
+    
+    for sim in range(simulations):
+        prices = np.zeros(num_days)
+        price = last_price
+        
+        for day in range(num_days):
+            # Generate random shock from standard normal distribution
+            random_shock = np.random.standard_normal()
+            
+            # Geometric Brownian Motion formula
+            # dt = 1 day, so we use daily drift and volatility
+            drift = (mu - 0.5 * sigma ** 2)
+            diffusion = sigma * random_shock
+            
+            # Calculate next price
+            price = price * np.exp(drift + diffusion)
+            prices[day] = price
+        
+        simulated_prices[sim, :] = prices
+    
+    # Calculate statistics across simulations
+    mean_prices = np.mean(simulated_prices, axis=0)
+    median_prices = np.median(simulated_prices, axis=0)
+    std_prices = np.std(simulated_prices, axis=0)
+    
+    # Calculate confidence intervals (5th and 95th percentiles)
+    lower_bound = np.percentile(simulated_prices, 5, axis=0)
+    upper_bound = np.percentile(simulated_prices, 95, axis=0)
     
     return pd.DataFrame({
         'Date': future_dates,
-        'Close': avg_prices
+        'Close': mean_prices,
+        'Median': median_prices,
+        'StdDev': std_prices,
+        'Lower90': lower_bound,
+        'Upper90': upper_bound
     })
 
 
