@@ -302,8 +302,13 @@ def generate_future_projections(df: pd.DataFrame, symbol: str, num_days: int, si
     # Monte Carlo simulation using Geometric Brownian Motion
     # S(t) = S(0) * exp((mu - 0.5*sigma^2)*t + sigma*sqrt(t)*Z)
     # where Z ~ N(0,1)
+    # Enhanced with increased volatility multiplier for more realistic fluctuations
     
     simulated_prices = np.zeros((simulations, num_days))
+    
+    # Amplify volatility to capture more realistic market fluctuations
+    volatility_multiplier = 1.5
+    enhanced_sigma = sigma * volatility_multiplier
     
     for sim in range(simulations):
         prices = np.zeros(num_days)
@@ -313,10 +318,10 @@ def generate_future_projections(df: pd.DataFrame, symbol: str, num_days: int, si
             # Generate random shock from standard normal distribution
             random_shock = np.random.standard_normal()
             
-            # Geometric Brownian Motion formula
+            # Geometric Brownian Motion formula with enhanced volatility
             # dt = 1 day, so we use daily drift and volatility
-            drift = (mu - 0.5 * sigma ** 2)
-            diffusion = sigma * random_shock
+            drift = (mu - 0.5 * enhanced_sigma ** 2)
+            diffusion = enhanced_sigma * random_shock
             
             # Calculate next price
             price = price * np.exp(drift + diffusion)
