@@ -3,7 +3,12 @@ Asset metadata definitions for the OpenFOF demo application.
 This module contains information about available assets including their symbols, names, and types.
 """
 
-import hashlib# Asset metadata - in a production system, this would come from a database
+import hashlib
+import pandas as pd
+from pathlib import Path
+from typing import Optional
+
+# Asset metadata - in a production system, this would come from a database
 ASSETS_METADATA = [
     {"id": "asset-001", "symbol": "BBUS", "name": "JPMorgan BetaBuilders U.S. Equity ETF", "type": "equity_etf", "description": "Broad U.S. equity market exposure"},
     {"id": "asset-002", "symbol": "BITQ", "name": "Bitwise Crypto Industry Innovators ETF", "type": "crypto_etf", "description": "ETF tracking companies in crypto and blockchain"},
@@ -40,9 +45,40 @@ ASSETS_METADATA = [
 ]
 
 
+def get_latest_price(symbol: str) -> Optional[float]:
+    """
+    Get the latest price for an asset from its CSV file.
+    
+    Args:
+        symbol: The asset ticker symbol
+    
+    Returns:
+        Latest price as float if available, None otherwise
+    """
+    csv_path = Path('assets') / f'{symbol}.csv'
+    if not csv_path.exists():
+        return None
+    
+    try:
+        df = pd.read_csv(csv_path)
+        if len(df) > 0 and 'Close' in df.columns:
+            # Get the last row's Close price
+            latest_price = float(df.iloc[-1]['Close'])
+            return round(latest_price, 2)
+    except Exception:
+        pass
+    
+    return None
+
+
 def get_all_assets():
-    """Return all available assets."""
-    return ASSETS_METADATA
+    """Return all available assets with their latest prices."""
+    assets_with_prices = []
+    for asset in ASSETS_METADATA:
+        asset_copy = asset.copy()
+        asset_copy['price'] = get_latest_price(asset['symbol'])
+        assets_with_prices.append(asset_copy)
+    return assets_with_prices
 
 
 def search_assets(query: str, case_sensitive: bool = False):
@@ -85,10 +121,16 @@ def search_assets(query: str, case_sensitive: bool = False):
         )
         ranked.append((rank, a))
 
-    ranked.sort(key=lambda x: x[0])
-    return [a for _, a in ranked]
-
-
+        ranked.sort(key=lambda x: x[0])
+    
+    # Add price information to results
+    results_with_prices = []
+    for _, asset in ranked:
+        asset_copy = asset.copy()
+        asset_copy['price'] = get_latest_price(asset['symbol'])
+        results_with_prices.append(asset_copy)
+    
+    return results_with_prices
 def get_asset_by_id(asset_id: str):
     """
     Get a specific asset by its ID.
@@ -97,11 +139,13 @@ def get_asset_by_id(asset_id: str):
         asset_id: The unique asset identifier
     
     Returns:
-        Asset dictionary if found, None otherwise
+        Asset dictionary with price if found, None otherwise
     """
     for asset in ASSETS_METADATA:
         if asset["id"] == asset_id:
-            return asset
+            asset_copy = asset.copy()
+            asset_copy['price'] = get_latest_price(asset['symbol'])
+            return asset_copy
     return None
 
 
@@ -113,11 +157,13 @@ def get_asset_by_symbol(symbol: str):
         symbol: The asset ticker symbol
     
     Returns:
-        Asset dictionary if found, None otherwise
+        Asset dictionary with price if found, None otherwise
     """
     for asset in ASSETS_METADATA:
         if asset["symbol"].upper() == symbol.upper():
-            return asset
+            asset_copy = asset.copy()
+            asset_copy['price'] = get_latest_price(asset['symbol'])
+            return asset_copy
     return None
 
 
